@@ -234,11 +234,11 @@ ul.places { grid-template-columns: minmax(0, 1fr); padding: 4px clamp(14px, 3vw,
 ul.places li { grid-template-columns: 132px minmax(0, 1fr) auto; column-gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
 ul.places li > * { grid-column: 2 / -1; }
 ul.places li > .nm { grid-column: 2; }
-ul.places li > .onmapbtn { grid-column: 3; }
+ul.places li > .acts { grid-column: 3; }
 ul.places li.np { grid-template-columns: minmax(0, 1fr) auto; }
 ul.places li.np > * { grid-column: 1 / -1; }
 ul.places li.np > .nm { grid-column: 1; }
-ul.places li.np > .onmapbtn { grid-column: 2; }
+ul.places li.np > .acts { grid-column: 2; }
 ul.places li > .photo { grid-column: 1; grid-row: 1 / span 8; margin: 4px 0 0; align-self: start; }  /* 不參與基線對齊，否則文字會被推到照片署名那一行 */
 .photo img { width: 100%; max-width: none; aspect-ratio: 4 / 3; object-fit: cover; border: 2px solid var(--ink); border-radius: 0; }
 .photo figcaption { margin-top: 5px; font-size: .64rem; line-height: 1.35; overflow-wrap: anywhere; }
@@ -311,6 +311,15 @@ details.more > .note, details.more > .addr, details.more > .gph { display: block
 
 /* Andy 推薦：黃底黑字小標，跟開頭的黃色太陽同色；不是按鈕，所以不用朱紅 */
 .pick { display: inline-block; background: var(--yellow); color: var(--ink); border: 1.5px solid var(--ink); font-size: .72rem; font-weight: 900; letter-spacing: .04em; line-height: 1.3; padding: 0 6px; margin-right: 8px; }
+/* 我的清單：每列的「收藏」切換，加上篩選列的「我的清單」只看收藏的地點 */
+.acts { display: inline-flex; gap: 14px; align-items: baseline; justify-self: end; }
+.keep { font: inherit; font-size: .8rem; font-weight: 700; background: none; border: 0; padding: 6px 0; margin: -6px 0; cursor: pointer; color: var(--ink); white-space: nowrap; }
+.keep[aria-pressed="true"] { color: var(--vermilion); }
+.mine { font: inherit; font-size: .84rem; font-weight: 700; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.mine[aria-pressed="true"] { background: var(--vermilion); color: var(--paper); }
+.minebar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 2px 0 8px; font-size: .84rem; font-weight: 700; color: var(--ink); }
+.minebar button { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; color: var(--vermilion); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 520px) { .near, .mine { padding: 6px 8px; } }
 </style>
 
 <div class="wrap">
@@ -329,9 +338,11 @@ details.more > .note, details.more > .addr, details.more > .gph { display: block
       <input type="search" id="q" placeholder="搜尋店名、地址、類型、地區，例如：爵士、拉麵、下北" autocomplete="off" aria-label="搜尋地點">
       <span class="found" id="found" hidden></span>
       <button class="clear" id="qclear" hidden>清除</button>
+      <button class="mine" id="mine" aria-pressed="false">我的清單</button>
       <button class="near" id="near" aria-pressed="false">離我最近</button>
     </div>
     <p class="nearmsg" id="nearmsg" hidden></p>
+    <p class="minebar" id="minebar" hidden></p>
     <div class="chips" id="types" aria-label="依類型篩選"></div>
   </div>
 
@@ -393,13 +404,20 @@ const STATIONS = [['新宿',35.6896,139.7006,-1],['澀谷',35.6580,139.7016,-1],
 
 const typeName = Object.fromEntries(DATA.types), areaInfo = Object.fromEntries(DATA.areas.map(a => [a[0], a]));
 const ORDER = DATA.types.map(t => t[0]);
-const state = { area: 'all', types: new Set(ORDER), pick: null, q: '' };
+const state = { area: 'all', types: new Set(ORDER), pick: null, q: '', onlyMine: false, shared: null };
 // 搜尋：全形半形、大小寫都視為相同；空白分開的每個詞都要命中
 const norm = t => (t || '').normalize('NFKC').toLowerCase();
 const terms = () => norm(state.q).split(/\s+/).filter(Boolean);
 const P = DATA.places.map((p, i) => ({ ...p, i, x: X(p.lon), y: Y(p.lat) }));
 P.forEach(p => { const sg = SIGN[p.area] || []; p.hay = norm([p.name, p.note, p.address, typeName[p.type], areaInfo[p.area][1], areaInfo[p.area][2], sg[0], sg[1], (p.lists || []).join(' '), p.gcat, p.intro, p.pick ? 'Andy推薦 Andy 推薦' : ''].join(' ')); });
-const matches = p => terms().every(t => p.hay.includes(t));
+// 我的清單：用店名算出固定的短代號（地點增減時代號不變），存在這個瀏覽器；分享連結把代號放在網址 #mine= 後面
+const nameId = t => { let x = 0x811c9dc5; for (const ch of t) { x ^= ch.codePointAt(0); x = Math.imul(x, 0x01000193) >>> 0; } return x.toString(36); };
+P.forEach(p => { p.id = nameId(p.name); });
+const MINE_KEY = 'tokyo-map-mine';
+const mine = new Set((() => { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch (e) { return []; } })());
+const saveMine = () => { try { localStorage.setItem(MINE_KEY, JSON.stringify([...mine])); } catch (e) {} };
+const listSet = () => state.shared || mine;
+const matches = p => (!state.onlyMine || listSet().has(p.id)) && terms().every(t => p.hay.includes(t));
 const svg = document.getElementById('svg');
 svg.setAttribute('viewBox', FULL.join(' ')); svg.style.aspectRatio = `${PJ.W} / ${PJ.H}`;
 // SVG 的 fill／stroke 屬性不接受 var()，顏色一律走 style
@@ -698,7 +716,8 @@ function placeRow(p) {
   if (state.near) ty.append(h('span', 'dist', walkText(p.dist)));
   const nm = h('a', 'nm'); hl(nm, p.name); nm.href = mapsUrl(p.url); nm.target = '_blank'; nm.rel = 'noopener'; nm.title = '在 Google 地圖開啟';
   const a = h('button', 'go onmapbtn', '示意圖'); a.onclick = () => { if (state.area !== 'all' && state.area !== p.area) state.area = p.area; pick(p.i, false); document.querySelector('.mapbox').scrollIntoView({ block: 'start', behavior: smooth() }); };
-  li.append(ty, nm, a);
+  const acts = h('span', 'acts'); acts.append(keepBtn(p), a);
+  li.append(ty, nm, acts);
   if (p.intro) { const e = h('p', 'desc'); hl(e, p.intro); li.append(e); }
   if (p.photo) {
     const f = h('figure', 'photo'), im = h('img'); im.src = p.photo.src; im.alt = p.name + ' 外觀'; im.loading = 'lazy'; im.width = p.photo.w; im.height = p.photo.h;
@@ -747,7 +766,12 @@ function renderList() {
   const total = P.filter(p => state.types.has(p.type) && matches(p)).length;
   const f = document.getElementById('found'); f.hidden = !state.q.trim(); f.textContent = `找到 ${total} 筆`;
   document.getElementById('qclear').hidden = !state.q;
-  if (!total) { root.append(h('p', 'noresult', `找不到符合「${state.q.trim()}」的地點。試試店名的一部分、類型（例如「拉麵」）或地區（例如「下北」）。`)); return; }
+  if (!total) {
+    const msg = state.onlyMine && !listSet().size ? '我的清單還是空的。按「我的清單」回到全部地點，在喜歡的地點按「☆ 收藏」，收好再按「我的清單」就只顯示收藏的地點。'
+      : state.onlyMine && !state.q.trim() ? '我的清單裡沒有這一類的地點。點「全部」看清單裡的其他類型。'
+      : `找不到符合「${state.q.trim()}」的地點。試試店名的一部分、類型（例如「拉麵」）或地區（例如「下北」）。${state.onlyMine ? '目前只搜尋我的清單，按「我的清單」可以搜尋全部地點。' : ''}`;
+    root.append(h('p', 'noresult', msg)); return;
+  }
   if (state.near) {
     // 離我最近：不分區，全部依距離排
     const items = P.filter(p => state.types.has(p.type) && matches(p)).map(p => ({ ...p, dist: distM(state.near, p) })).sort((a, b) => a.dist - b.dist);
@@ -792,6 +816,50 @@ nearBtn.onclick = () => {
     sayNear(err.code === 1 ? '沒有取得定位權限。請在瀏覽器設定裡允許這個網站使用位置，再按一次。' : '暫時定位不到，請稍後再按一次。');
   }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
 };
+// 收藏切換：清單模式下取消收藏，該列會在下次重畫時消失，所以直接重畫全部
+function keepBtn(p) {
+  const b = h('button', 'keep'), on = mine.has(p.id);
+  b.setAttribute('aria-pressed', on); b.textContent = on ? '★ 已收藏' : '☆ 收藏';
+  b.setAttribute('aria-label', (on ? '從我的清單移除：' : '收進我的清單：') + p.name);
+  b.onclick = () => { if (mine.has(p.id)) mine.delete(p.id); else mine.add(p.id); saveMine(); refreshMine(); };
+  return b;
+}
+const mineBtn = document.getElementById('mine'), mineBar = document.getElementById('minebar');
+function renderMineUI() {
+  const n = P.filter(p => listSet().has(p.id)).length;
+  mineBtn.setAttribute('aria-pressed', state.onlyMine);
+  mineBtn.textContent = state.shared ? `分享的清單 ${n}` : n ? `我的清單 ${n}` : '我的清單';
+  mineBar.textContent = '';
+  mineBar.hidden = !state.onlyMine;
+  if (!state.onlyMine) return;
+  if (state.shared) {
+    mineBar.append(`正在看別人分享的 ${n} 個地點。`);
+    const keepAll = h('button', '', '全部收進我的清單'); keepAll.onclick = () => { state.shared.forEach(id => mine.add(id)); saveMine(); state.shared = null; history.replaceState(null, '', location.pathname + location.search); refreshMine(); };
+    const back = h('button', '', '改看我自己的清單'); back.onclick = () => { state.shared = null; history.replaceState(null, '', location.pathname + location.search); refreshMine(); };
+    mineBar.append(keepAll, back); return;
+  }
+  if (!n) return;
+  mineBar.append(`只顯示你收藏的 ${n} 個地點。`);
+  const share = h('button', '', '複製分享連結'); share.onclick = async () => {
+    const url = location.origin + location.pathname + '#mine=' + P.filter(p => mine.has(p.id)).map(p => p.id).join('.');
+    try { await navigator.clipboard.writeText(url); share.textContent = '已複製連結'; } catch (e) { prompt('複製這個連結：', url); }
+  };
+  const clear = h('button', '', '清空清單'); clear.onclick = () => { if (confirm(`把我的清單裡的 ${n} 個地點全部移除？`)) { mine.clear(); saveMine(); refreshMine(); } };
+  mineBar.append(share, clear);
+}
+function refreshMine() {
+  if (state.pick !== null && !matches(P[state.pick])) { state.pick = null; resetInfo(); }
+  if (state.area !== 'all' && !P.some(p => p.area === state.area && matches(p))) { state.area = 'all'; state.vb = null; }
+  renderMineUI(); drawMap(); renderChips(); renderStations(); renderList();
+}
+mineBtn.onclick = () => {
+  if (state.shared) { state.shared = null; history.replaceState(null, '', location.pathname + location.search); }
+  else state.onlyMine = !state.onlyMine;
+  refreshMine();
+  if (state.onlyMine) document.getElementById('list').scrollIntoView({ block: 'start', behavior: smooth() });
+};
+// 打開分享連結：#mine=代號.代號… 先只顯示那份清單，不動自己的收藏
+{ const m = location.hash.match(/^#mine=([0-9a-z.]+)$/); if (m) { const ids = new Set(m[1].split('.').filter(Boolean)); if (P.some(p => ids.has(p.id))) { state.shared = ids; state.onlyMine = true; } } }
 const qInput = document.getElementById('q');
 function applySearch() {
   state.q = qInput.value;
@@ -803,7 +871,7 @@ qInput.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(apply
 qInput.addEventListener('keydown', e => { if (e.key === 'Escape') { qInput.value = ''; applySearch(); } });
 document.getElementById('qclear').onclick = () => { qInput.value = ''; applySearch(); qInput.focus(); };
 document.getElementById('reset').onclick = () => { state.area = 'all'; state.vb = null; state.pick = null; resetInfo(); drawMap(); renderChips(); };
-renderStats(); renderChips(); renderStations(); renderList(); resetInfo(); drawMap();
+renderStats(); renderMineUI(); renderChips(); renderStations(); renderList(); resetInfo(); drawMap();
 // 縮放與拖曳：滾輪、兩指撥開、單指或滑鼠拖曳；拖曳超過 5px 就不算點擊
 const curVB = () => svg.getAttribute('viewBox').split(' ').map(Number);
 function clampVB([x, y, w, hh]) {
