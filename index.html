@@ -84,7 +84,7 @@ mark { background: var(--yellow); color: inherit; border-radius: 2px; padding: 0
 .stn-lbl { font-family: var(--f-label); font-weight: 700; fill: #4a443b; paint-order: stroke; stroke: #fffaf0; stroke-linejoin: round; pointer-events: none; }
 .tip .sw { display: inline-block; width: 18px; height: 5px; border-radius: 3px; vertical-align: middle; margin-right: 6px; border: 1px solid var(--ink); }
 .plabel { font-family: var(--f-label); font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: #fffaf0; stroke-linejoin: round; cursor: pointer; }
-.plink:hover .plabel { fill: var(--vermilion); }
+.plink:hover .plabel, .plabel.on { fill: var(--vermilion); }
 .zoombtns { display: inline-flex; gap: 6px; }
 .zb { font: inherit; font-weight: 900; font-size: .95rem; line-height: 1; width: 30px; height: 26px; background: var(--paper); border: 2px solid var(--ink); color: var(--ink); border-radius: 999px; cursor: pointer; }
 .basemap { filter: var(--map-filter); }
@@ -467,6 +467,7 @@ const fmtRate = p => p.rating ? `${p.rating[0].toFixed(1)}（${p.rating[1].toLoc
 function showHover(j) {
   const c = dots[j], p = P[j];
   c.setAttribute('r', 10 * curPx);
+  labelsG.querySelectorAll(`.plabel[data-i="${j}"]`).forEach(t => t.classList.add('on'));
   tip.textContent = '';
   const meta = h('span', 'tmeta'); meta.style.color = `var(--t-${p.type})`; meta.append(typeName[p.type]);
   if (p.rating) meta.append(h('span', 'rate', fmtRate(p)));
@@ -480,7 +481,7 @@ function showHover(j) {
   y = Math.max(8, Math.min(y, mr.height - th - 8));
   tip.style.left = Math.max(8, x) + 'px'; tip.style.top = y + 'px';
 }
-function hideHover(j) { tip.hidden = true; dots[j].setAttribute('r', (state.pick === j ? 9 : 6) * curPx); }
+function hideHover(j) { tip.hidden = true; dots[j].setAttribute('r', (state.pick === j ? 9 : 6) * curPx); labelsG.querySelectorAll('.plabel.on').forEach(t => t.classList.remove('on')); }
 // 懸停由整張圖統一判斷：滑鼠所在的圓點換了，就把上一顆縮回原尺寸（不搬動圓點的 DOM 順序，否則會漏掉移開事件）
 let hov = null, hovLine = null;
 // 鐵路線懸停：該線加粗，小卡顯示路線名稱與路線色
@@ -586,7 +587,7 @@ function drawMap() {
         if (boxes.some(o => !(b[2] < o[0] || b[0] > o[2] || b[3] < o[1] || b[1] > o[3]))) continue;
         boxes.push(b);
         const a = el('a', { class: 'plink', target: '_blank', rel: 'noopener' }, labelsG); a.setAttribute('href', mapsUrl(p.url));
-        const t = el('text', { x: side > 0 ? b[0] : b[2], y: q.y, 'text-anchor': side > 0 ? 'start' : 'end', 'dominant-baseline': 'central', 'font-size': fs, 'stroke-width': 4.5 * px, class: 'plabel' }, a);
+        const t = el('text', { x: side > 0 ? b[0] : b[2], y: q.y, 'text-anchor': side > 0 ? 'start' : 'end', 'dominant-baseline': 'central', 'font-size': fs, 'stroke-width': 4.5 * px, class: 'plabel', 'data-i': p.i }, a);
         t.textContent = name; break;
       }
     }
@@ -819,7 +820,7 @@ svg.addEventListener('wheel', e => {
 const ptrs = new Map(); let g = null, moved = 0;
 svg.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse' || ptrs.size) return;
-  const cl = e.target.classList, d = cl && cl.contains('pt') ? +e.target.dataset.i : null;
+  const cl = e.target.classList, d = cl && (cl.contains('pt') || cl.contains('plabel')) ? +e.target.dataset.i : null;  // 圓點或旁邊的店名都觸發同一個懸停
   setHover(d);
   setLine(d === null && cl && cl.contains('rail-hit') ? +e.target.dataset.l : null, e);
 });
