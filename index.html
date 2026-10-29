@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@900&family=Noto+Serif+JP:wght@900&family=Noto+Sans+JP:wght@700&family=Dela+Gothic+One&family=Barlow:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+JP:wght@900&family=Noto+Sans+JP:wght@700&family=Dela+Gothic+One&display=swap">
 <style>
 /* 版面：橫尾忠則式的海報世界（單一配色，不跟深色模式）。藍色直條紋＋星星當底，開頭是旭日放射光與拱形標語帶；
    示意圖、站名牌、清單都放在米色紙面板上，外框是金色雙線。 */
@@ -252,6 +252,62 @@ footer .tag { writing-mode: horizontal-tb; max-height: none; background: none; b
   ul.places li { grid-template-columns: 100px minmax(0, 1fr) auto; column-gap: 12px; }
   .hero .band { font-size: .95rem; padding: 3px 12px; }
 }
+
+/* ===== 第二輪（2026-10-30，Andy：「照你說的全做」）=====
+   1 站名板仿 JR 站名標  2 手機開頭縮短  3 離我最近  4 沒照片的列精簡成兩行  5 字體 4 套、朱紅只給可點的東西 ===== */
+:root { --f-poster: "Noto Serif JP", "Hiragino Mincho ProN", serif; --f-latin: "Noto Sans TC", "Hiragino Sans", sans-serif; }
+.latin { font-variant-numeric: tabular-nums; }
+/* 5：清單的類型字改灰，顏色只留在圓點（對應地圖）；地圖標頭改黑底，朱紅只給連結與按下的狀態 */
+.ty { color: var(--muted); }
+.rate { color: var(--muted); }
+.rate::before { color: var(--muted); }
+.maphead { background: var(--ink); }
+/* 1：JR 站名標 */
+.sign.jr { background: #fff; border: 3px solid var(--ink); box-shadow: var(--frame-gold); margin: 0 5px; text-align: center; }
+.jr-main { padding: 14px 16px 8px; }
+.jr .sign-k { margin: 0; font-family: var(--f-sign); font-weight: 400; font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1.1; letter-spacing: .24em; padding-left: .24em; color: var(--ink); }
+.jr .sign-r { font-family: var(--f-label); font-weight: 700; font-size: .95rem; letter-spacing: .1em; color: var(--muted); margin-top: 2px; }
+.jr-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 7px 14px;
+  border-block: 3px solid var(--ink); color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.4); }
+.jr-end { font-family: var(--f-label); font-weight: 700; font-size: .92rem; color: #fff; text-decoration: none; white-space: nowrap; }
+.jr-prev { justify-self: start; } .jr-next { justify-self: end; }
+a.jr-end:hover { text-decoration: underline; text-underline-offset: 3px; }
+.jr-zh { font-size: .8rem; font-weight: 700; letter-spacing: .06em; }
+.jr-sub { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; padding: 7px 14px 9px; font-size: .78rem; color: var(--muted); text-align: left; }
+.jr-act { display: inline-flex; gap: 12px; align-items: baseline; }
+.jr-cnt { color: var(--ink); font-weight: 700; }
+/* 3：離我最近 */
+.near { font: inherit; font-size: .84rem; font-weight: 700; background: var(--ink); color: var(--paper); border: 0; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+.near[aria-pressed="true"] { background: var(--vermilion); }
+.near:disabled { opacity: .6; cursor: progress; }
+.nearmsg { margin: 2px 0 8px; font-size: .84rem; color: var(--vermilion); font-weight: 700; }
+.dist { margin-left: 10px; color: var(--ink); font-weight: 900; letter-spacing: 0; }
+/* 4：沒照片的列：簡介最多兩行，地址與相片連結收進展開 */
+ul.places li.np { padding: 12px 0; }
+li.np .desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+details.more { grid-column: 1 / -1; margin-top: 3px; }
+details.more summary { list-style: none; cursor: pointer; font-size: .76rem; font-weight: 700; color: var(--cobalt); width: fit-content; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "＋ "; }
+details.more[open] summary::before { content: "－ "; }
+details.more > .note, details.more > .addr, details.more > .gph { display: block; margin-top: 3px; }
+/* 2：手機開頭縮短，第一個畫面就看得到地圖 */
+@media (max-width: 520px) {
+  .hero .sky { height: 190px; padding-bottom: 18px; }
+  .hero .sky::before { width: 150px; bottom: -78px; }
+  .hero .band { top: 14px; font-size: .85rem; }
+  .hero h1 { font-size: 2.3rem; text-shadow: 3px 3px 0 var(--ink); }
+  .hero .intro { padding-top: 10px; }
+  .lead-rest { display: none; }
+  .filters { margin-top: 6px; }
+  .mapbox { margin-top: 14px; }
+  .jr .sign-k { letter-spacing: .16em; padding-left: .16em; }
+  /* 篩選列固定在頂端：類型標籤改一行橫向滑動，不然四行高會蓋掉站名板 */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; }
+  .area { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 110px); }
+}
 </style>
 
 <div class="wrap">
@@ -261,7 +317,7 @@ footer .tag { writing-mode: horizontal-tb; max-height: none; background: none; b
       <h1>東京收藏地圖</h1>
     </div>
     <div class="intro">
-      <p class="lead"><span id="stats"></span>Google 地圖裡收藏的東京地點，依地區與類型整理。資料來自 2026-10-29 的匯出，不含「人家」清單；「想吃／想去」的地址是逐筆從 Google 地圖補上的，已歇業的店已移除。</p>
+      <p class="lead"><span id="stats"></span><span class="lead-rest">Google 地圖裡收藏的東京地點，依地區與類型整理。資料來自 2026-10-29 的匯出，不含「人家」清單；「想吃／想去」的地址是逐筆從 Google 地圖補上的，已歇業的店已移除。</span></p>
     </div>
   </header>
 
@@ -270,7 +326,9 @@ footer .tag { writing-mode: horizontal-tb; max-height: none; background: none; b
       <input type="search" id="q" placeholder="搜尋店名、地址、類型、地區，例如：爵士、拉麵、下北" autocomplete="off" aria-label="搜尋地點">
       <span class="found" id="found" hidden></span>
       <button class="clear" id="qclear" hidden>清除</button>
+      <button class="near" id="near" aria-pressed="false">離我最近</button>
     </div>
+    <p class="nearmsg" id="nearmsg" hidden></p>
     <div class="chips" id="types" aria-label="依類型篩選"></div>
   </div>
 
@@ -621,56 +679,113 @@ function hl(elm, text) {
   for (let j = 0; j < text.length; j++) { if (hit[j] !== on) { flush(); on = hit[j]; } buf += text[j]; }
   flush();
 }
+// 步行時間：直線距離乘 1.3 當作實際路程，每分鐘 80 公尺（日本不動產廣告的步行換算），只是估算
+const distM = (a, b) => { const R = 6371000, r = Math.PI / 180, dl = (b.lat - a.lat) * r, dn = (b.lon - a.lon) * r;
+  const q = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(q)); };
+const walkText = m => m < 2000 ? `步行約 ${Math.max(1, Math.round(m * 1.3 / 80))} 分鐘` : `直線 ${(m / 1000).toFixed(m < 20000 ? 1 : 0)} 公里`;
+// 一列店家。有照片的：照片在左、地址直接顯示；沒照片的：精簡兩行，地址收進「地址」展開
+function placeRow(p) {
+  const li = h('li'); li.id = 'p' + p.i; if (state.pick === p.i) li.className = 'hit';
+  const ty = h('span', 'ty');
+  const d = h('span', 'dot'); d.style.background = `var(--t-${p.type})`; ty.append(d, typeName[p.type]);
+  if (p.rating) ty.append(h('span', 'rate', fmtRate(p)));
+  if (state.near) ty.append(h('span', 'dist', walkText(p.dist)));
+  const nm = h('a', 'nm'); hl(nm, p.name); nm.href = mapsUrl(p.url); nm.target = '_blank'; nm.rel = 'noopener'; nm.title = '在 Google 地圖開啟';
+  const a = h('button', 'go onmapbtn', '示意圖'); a.onclick = () => { if (state.area !== 'all' && state.area !== p.area) state.area = p.area; pick(p.i, false); document.querySelector('.mapbox').scrollIntoView({ block: 'start', behavior: smooth() }); };
+  li.append(ty, nm, a);
+  if (p.intro) { const e = h('p', 'desc'); hl(e, p.intro); li.append(e); }
+  if (p.photo) {
+    const f = h('figure', 'photo'), im = h('img'); im.src = p.photo.src; im.alt = p.name + ' 外觀'; im.loading = 'lazy'; im.width = p.photo.w; im.height = p.photo.h;
+    const cap = h('figcaption'), cr = h('a', '', `${p.photo.note ? p.photo.note + '・' : ''}© ${p.photo.by}／${p.photo.lic}`); cr.href = p.photo.page; cr.target = '_blank'; cr.rel = 'noopener';
+    cap.append(cr); f.append(im, cap); li.append(f);
+    if (p.note) { const e = h('span', 'note'); hl(e, p.note); li.append(e); }
+    if (p.address) { const e = h('span', 'addr'); hl(e, cleanAddr(p.address)); li.append(e); }
+  } else {
+    li.classList.add('np');
+    const more = h('details', 'more'), sm = h('summary', '', '地址與相片');
+    more.append(sm);
+    if (p.note) { const e = h('span', 'note'); hl(e, p.note); more.append(e); }
+    if (p.address) { const e = h('span', 'addr'); hl(e, cleanAddr(p.address)); more.append(e); }
+    if (DATA.tiles) { const g = h('a', 'gph', '在 Google 地圖看店家相片 ↗'); g.href = mapsUrl(p.url); g.target = '_blank'; g.rel = 'noopener'; more.append(g); }
+    // 搜尋命中地址時自動展開，讓命中的字看得到
+    if (state.q.trim() && terms().some(t => (p.address || '').toLowerCase().includes(t) || (p.note || '').toLowerCase().includes(t))) more.open = true;
+    li.append(more);
+  }
+  return li;
+}
+// 站名板：仿 JR 車站的站名標。中間大字站名與羅馬拼音，下面一條路線色帶，左右寫上一站、下一站（照山手線一圈的區域順序）
+function stationSign(k, zh, jp, count, total, prevK, nextK) {
+  const [kj, rm, lines, col] = SIGN[k];
+  const sign = h('div', 'sign jr');
+  const main = h('div', 'jr-main');
+  main.append(h('h2', 'sign-k', kj), h('div', 'sign-r', rm));
+  const bar = h('div', 'jr-bar'); bar.style.background = col;
+  const end = (k2, dir) => {
+    if (!k2) return h('span', 'jr-end');
+    const a = h('a', 'jr-end jr-' + dir); a.href = '#' + k2;
+    a.textContent = dir === 'prev' ? `◀ ${SIGN[k2][0]}` : `${SIGN[k2][0]} ▶`;
+    a.setAttribute('aria-label', (dir === 'prev' ? '上一區：' : '下一區：') + SIGN[k2][0]); return a;
+  };
+  bar.append(end(prevK, 'prev'), h('span', 'jr-zh', zh), end(nextK, 'next'));
+  const sub = h('div', 'jr-sub');
+  sub.append(h('span', '', `${lines}・${jp}`));
+  const right = h('span', 'jr-act');
+  right.append(h('span', 'jr-cnt', count === total ? `${count} 個地點` : `${count}／${total} 個地點`));
+  const btn = h('button', 'onmap', '在地圖上看'); btn.onclick = () => showArea(k); right.append(btn);
+  sub.append(right);
+  sign.append(main, bar, sub);
+  return sign;
+}
 function renderList() {
   const root = document.getElementById('list'); root.textContent = '';
   const total = P.filter(p => state.types.has(p.type) && matches(p)).length;
   const f = document.getElementById('found'); f.hidden = !state.q.trim(); f.textContent = `找到 ${total} 筆`;
   document.getElementById('qclear').hidden = !state.q;
   if (!total) { root.append(h('p', 'noresult', `找不到符合「${state.q.trim()}」的地點。試試店名的一部分、類型（例如「拉麵」）或地區（例如「下北」）。`)); return; }
-  DATA.areas.forEach(([k, zh, jp]) => {
-    const all = P.filter(p => p.area === k); if (!all.length) return;
-    const items = all.filter(p => state.types.has(p.type) && matches(p));
-    if (!items.length) return;
-    const [kj, rm, lines, col] = SIGN[k];
+  if (state.near) {
+    // 離我最近：不分區，全部依距離排
+    const items = P.filter(p => state.types.has(p.type) && matches(p)).map(p => ({ ...p, dist: distM(state.near, p) })).sort((a, b) => a.dist - b.dist);
+    const sec = h('section', 'area'); sec.id = 'near-list';
+    const sign = h('div', 'sign jr');
+    const main = h('div', 'jr-main'); main.append(h('h2', 'sign-k', '現在地'), h('div', 'sign-r', 'Genzaichi'));
+    const bar = h('div', 'jr-bar'); bar.style.background = 'var(--ink)';
+    bar.append(h('span', 'jr-end'), h('span', 'jr-zh', '依距離排序'), h('span', 'jr-end'));
+    const far = items[0].dist > 30000;
+    const sub = h('div', 'jr-sub', far ? '你現在離東京很遠，距離只供參考。' : '步行時間用直線距離估算，實際路線可能更遠。');
+    sign.append(main, bar, sub); sec.append(sign);
+    const ul = h('ul', 'places'); items.forEach(p => ul.append(placeRow(p))); sec.append(ul); root.append(sec);
+    return;
+  }
+  const vis = DATA.areas.map(([k, zh, jp]) => {
+    const all = P.filter(p => p.area === k);
+    return { k, zh, jp, all, items: all.filter(p => state.types.has(p.type) && matches(p)) };
+  }).filter(a => a.items.length);
+  vis.forEach(({ k, zh, jp, all, items }, n) => {
     const sec = h('section', 'area'); sec.id = k;  // 外框只給站牌，清單本身不加框
-    const sign = h('div', 'sign');
-    const main = h('div', 'sign-main');
-    const side = h('div', 'sign-side');
-    const cnt = h('div', 'cnt'); cnt.append(h('b', '', items.length), h('span', '', items.length === all.length ? '個地點' : `／${all.length} 個`));
-    const btn = h('button', 'onmap', '在地圖上看'); btn.onclick = () => showArea(k);
-    side.append(cnt, btn);
-    main.append(h('h2', 'sign-k', kj), side, h('div', 'sign-r', rm));
-    const bar = h('div', 'sign-bar'); bar.style.background = col;
-    bar.append(h('span', 'zh', zh), h('span', '', `${lines}・${jp}`));
-    sign.append(main, bar);
+    sec.append(stationSign(k, zh, jp, items.length, all.length, vis[n - 1]?.k, vis[n + 1]?.k));
     const ul = h('ul', 'places');
     items.sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type) || a.name.localeCompare(b.name, 'ja'));
-    items.forEach(p => {
-      const li = h('li'); li.id = 'p' + p.i; if (state.pick === p.i) li.className = 'hit';
-      const ty = h('span', 'ty'); ty.style.color = `var(--t-${p.type})`;
-      const d = h('span', 'dot'); d.style.background = `var(--t-${p.type})`; ty.append(d, typeName[p.type]);
-      const nm = h('a', 'nm'); hl(nm, p.name); nm.href = mapsUrl(p.url); nm.target = '_blank'; nm.rel = 'noopener'; nm.title = '在 Google 地圖開啟';
-      const a = h('button', 'go onmapbtn', '示意圖'); a.onclick = () => { if (state.area !== 'all' && state.area !== p.area) state.area = p.area; pick(p.i, false); document.querySelector('.mapbox').scrollIntoView({ block: 'start', behavior: smooth() }); };
-      if (p.rating) ty.append(h('span', 'rate', fmtRate(p)));
-      li.append(ty, nm, a);
-      if (p.intro) { const e = h('p', 'desc'); hl(e, p.intro); li.append(e); }
-      // 外觀照片：地標用維基共享資源的自由授權照片（附作者與授權）；其他小店連到 Google 地圖看店家相片
-      if (!p.photo) li.classList.add('np');
-      if (p.photo) {
-        const f = h('figure', 'photo'), im = h('img'); im.src = p.photo.src; im.alt = p.name + ' 外觀'; im.loading = 'lazy'; im.width = p.photo.w; im.height = p.photo.h;
-        const cap = h('figcaption'), cr = h('a', '', `${p.photo.note ? p.photo.note + '・' : ''}© ${p.photo.by}／${p.photo.lic}`); cr.href = p.photo.page; cr.target = '_blank'; cr.rel = 'noopener';
-        cap.append(cr); f.append(im, cap); li.append(f);
-      } else if (DATA.tiles) { const g = h('a', 'gph', '在 Google 地圖看店家相片 ↗'); g.href = mapsUrl(p.url); g.target = '_blank'; g.rel = 'noopener'; li.append(g); }
-      if (p.note) { const e = h('span', 'note'); hl(e, p.note); li.append(e); }
-      if (p.address) { const e = h('span', 'addr'); hl(e, cleanAddr(p.address)); li.append(e); }
-      ul.append(li);
-    });
-    sec.append(sign);
-    sec.append(ul);
-    root.append(sec);
+    items.forEach(p => ul.append(placeRow(p)));
+    sec.append(ul); root.append(sec);
   });
 }
 let qt;
+const nearBtn = document.getElementById('near'), nearMsg = document.getElementById('nearmsg');
+const sayNear = t => { nearMsg.textContent = t; nearMsg.hidden = !t; };
+nearBtn.onclick = () => {
+  sayNear('');
+  if (state.near) { state.near = null; nearBtn.setAttribute('aria-pressed', 'false'); nearBtn.textContent = '離我最近'; renderList(); return; }
+  if (!navigator.geolocation) { sayNear('這個瀏覽器不能定位。'); return; }
+  nearBtn.textContent = '定位中…'; nearBtn.disabled = true;
+  navigator.geolocation.getCurrentPosition(pos => {
+    nearBtn.disabled = false; state.near = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    nearBtn.setAttribute('aria-pressed', 'true'); nearBtn.textContent = '改回依地區'; renderList();
+    document.getElementById('list').scrollIntoView({ block: 'start', behavior: smooth() });
+  }, err => {
+    nearBtn.disabled = false; nearBtn.textContent = '離我最近';
+    sayNear(err.code === 1 ? '沒有取得定位權限。請在瀏覽器設定裡允許這個網站使用位置，再按一次。' : '暫時定位不到，請稍後再按一次。');
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+};
 const qInput = document.getElementById('q');
 function applySearch() {
   state.q = qInput.value;
@@ -759,7 +874,7 @@ if (DATA.tiles) {
         live.append(li);
       });
       const t = rows.map(x => x['dc:date']).sort().pop();
-      meta.textContent = `更新時間 ${t ? new Date(t).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit' }) : '—'}（日本時間）・出典：公共交通オープンデータセンター（CC BY 4.0）`;
+      meta.textContent = `更新時間 ${t ? new Date(t).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit' }) : '未知'}（日本時間）・出典：公共交通オープンデータセンター（CC BY 4.0）`;
     } catch (e) {
       live.textContent = ''; live.append(h('li', 'unko-wait', '暫時讀不到都營的運行情報，請直接看下面的官方頁。'));
     }
